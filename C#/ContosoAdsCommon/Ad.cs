@@ -27,11 +27,11 @@ namespace ContosoAdsCommon
         public Ad ToAd()
         {
             this.PartitionKey = this.Category.ToString();
-            this.RowKey = this.AdId.ToString();
+            this.RowKey = this.Id;
             return this;
         }
 
-        public int AdId { get; set; }
+        public string Id { get; set; }
         [StringLength(100)]
         public string Title { get; set; }
         public int Price { get; set; }

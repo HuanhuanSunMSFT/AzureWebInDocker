@@ -29,15 +29,12 @@ namespace ContosoAdsWebJob
                 outputBlob.Properties.ContentType = "image/jpeg";
             }
 
-            // Entity Framework context class is not thread-safe, so it must
-            // be instantiated and disposed within the function.
-            // Open storage account using credentials from .cscfg file.
             var storageAccount = CloudStorageAccount.Parse(ConfigurationManager.ConnectionStrings["AzureWebJobsStorage"].ToString());
             CloudTableClient tableClient = storageAccount.CreateCloudTableClient();
             var table = tableClient.GetTableReference("ads");
             table.CreateIfNotExists();
 
-            var id = blobInfo.AdId;
+            var id = blobInfo.Id;
             Ad ad = FindAdFromId(table, id);
             if (ad == null)
             {
@@ -89,9 +86,9 @@ namespace ContosoAdsWebJob
             }
         }
 
-        private static Ad FindAdFromId(CloudTable table, int id)
+        private static Ad FindAdFromId(CloudTable table, string id)
         {
-            return table.ExecuteQuery(new TableQuery<Ad>().Where(TableQuery.GenerateFilterConditionForInt("AdId", QueryComparisons.Equal, id))).FirstOrDefault();
+            return table.ExecuteQuery(new TableQuery<Ad>().Where(TableQuery.GenerateFilterCondition("AdId", QueryComparisons.Equal, id))).FirstOrDefault();
         }
     }
 }

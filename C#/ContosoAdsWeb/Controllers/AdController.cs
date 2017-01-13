@@ -79,13 +79,13 @@ namespace ContosoAdsWeb.Controllers
         }
 
         // GET: Ad/Details/5
-        public ActionResult Details(int? id)
+        public ActionResult Details(string id)
         {
             if (id == null)
             {
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
-            Ad ad = table.ExecuteQuery(new TableQuery<Ad>().Where(TableQuery.GenerateFilterConditionForInt("AdId", QueryComparisons.Equal, id.Value))).FirstOrDefault();
+            Ad ad = FindAdFromId(id);
             if (ad == null)
             {
                 return HttpNotFound();
@@ -117,15 +117,16 @@ namespace ContosoAdsWeb.Controllers
                     ad.ImageURL = imageBlob.Uri.ToString();
                 }
                 ad.PostedDate = DateTime.Now;
+                ad.Id = Guid.NewGuid().ToString();
                 await table.ExecuteAsync(TableOperation.InsertOrReplace(ad.ToAd()));
-                Trace.TraceInformation("Created AdId {0} in database", ad.AdId);
+                Trace.TraceInformation("Created AdId {0} in database", ad.Id);
 
                 if (imageBlob != null)
                 {
-                    BlobInformation blobInfo = new BlobInformation() { AdId = ad.AdId, BlobUri = new Uri(ad.ImageURL) };
+                    BlobInformation blobInfo = new BlobInformation() { Id = ad.Id, BlobUri = new Uri(ad.ImageURL) };
                     var queueMessage = new CloudQueueMessage(JsonConvert.SerializeObject(blobInfo));
                     await thumbnailRequestQueue.AddMessageAsync(queueMessage);
-                    Trace.TraceInformation("Created queue message for AdId {0}", ad.AdId);
+                    Trace.TraceInformation("Created queue message for AdId {0}", ad.Id);
                 }
                 return RedirectToAction("Index");
             }
@@ -134,13 +135,13 @@ namespace ContosoAdsWeb.Controllers
         }
 
         // GET: Ad/Edit/5
-        public ActionResult Edit(int? id)
+        public ActionResult Edit(string id)
         {
             if (id == null)
             {
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
-            Ad ad = table.ExecuteQuery(new TableQuery<Ad>().Where(TableQuery.GenerateFilterConditionForInt("AdId", QueryComparisons.Equal, id.Value))).FirstOrDefault();
+            Ad ad = FindAdFromId(id);
             if (ad == null)
             {
                 return HttpNotFound();
@@ -168,18 +169,17 @@ namespace ContosoAdsWeb.Controllers
                     imageBlob = await UploadAndSaveBlobAsync(imageFile);
                     ad.ImageURL = imageBlob.Uri.ToString();
                 }
+                
+                // Save changes.
 
-                //db.Entry(ad).State = EntityState.Modified;
-                //await db.SaveChangesAsync();
-
-                Trace.TraceInformation("Updated AdId {0} in database", ad.AdId);
+                Trace.TraceInformation("Updated AdId {0} in database", ad.Id);
 
                 if (imageBlob != null)
                 {
-                    BlobInformation blobInfo = new BlobInformation() { AdId = ad.AdId, BlobUri = new Uri(ad.ImageURL) };
+                    BlobInformation blobInfo = new BlobInformation() { Id = ad.Id, BlobUri = new Uri(ad.ImageURL) };
                     var queueMessage = new CloudQueueMessage(JsonConvert.SerializeObject(blobInfo));
                     await thumbnailRequestQueue.AddMessageAsync(queueMessage);
-                    Trace.TraceInformation("Created queue message for AdId {0}", ad.AdId);
+                    Trace.TraceInformation("Created queue message for AdId {0}", ad.Id);
                 }
                 return RedirectToAction("Index");
             }
@@ -187,13 +187,13 @@ namespace ContosoAdsWeb.Controllers
         }
 
         // GET: Ad/Delete/5
-        public ActionResult Delete(int? id)
+        public ActionResult Delete(string id)
         {
             if (id == null)
             {
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
-            Ad ad = FindAdFromId(id.Value);
+            Ad ad = FindAdFromId(id);
             if (ad == null)
             {
                 return HttpNotFound();
@@ -204,7 +204,7 @@ namespace ContosoAdsWeb.Controllers
         // POST: Ad/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
-        public async Task<ActionResult> DeleteConfirmed(int id)
+        public async Task<ActionResult> DeleteConfirmed(string id)
         {
             Ad ad = FindAdFromId(id);
 
@@ -212,7 +212,7 @@ namespace ContosoAdsWeb.Controllers
 
             await table.ExecuteAsync(TableOperation.Delete(ad));
 
-            Trace.TraceInformation("Deleted ad {0}", ad.AdId);
+            Trace.TraceInformation("Deleted ad {0}", ad.Id);
             return RedirectToAction("Index");
         }
 
@@ -256,9 +256,9 @@ namespace ContosoAdsWeb.Controllers
             await blobToDelete.DeleteAsync();
         }
 
-        private Ad FindAdFromId(int id)
+        private Ad FindAdFromId(string id)
         {
-            return table.ExecuteQuery(new TableQuery<Ad>().Where(TableQuery.GenerateFilterConditionForInt("AdId", QueryComparisons.Equal, id))).FirstOrDefault();
+            return table.ExecuteQuery(new TableQuery<Ad>().Where(TableQuery.GenerateFilterCondition("AdId", QueryComparisons.Equal, id))).FirstOrDefault();
         }
     }
 }
