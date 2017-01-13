@@ -1,0 +1,14 @@
+version: '2.1'
+
+services:
+  contosoadsweb:
+    image: contosoadsweb
+    build:
+      context: .\ContosoAdsWeb
+      dockerfile: Dockerfile
+
+  contosoadswebjob:
+    image: contosoadswebjob
+    build:
+      context: .\ContosoAdsWebJob
+      dockerfile: Dockerfile
