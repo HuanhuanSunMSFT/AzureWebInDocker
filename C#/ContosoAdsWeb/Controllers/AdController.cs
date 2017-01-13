@@ -73,7 +73,7 @@ namespace ContosoAdsWeb.Controllers
             var adsList = table.ExecuteQuery(new TableQuery<Ad>());
             if (category != null)
             {
-                adsList = adsList.Where(a => a.Category == (Category)category);
+                adsList = adsList.Where(a => string.Equals(a.Category, ((Category)category).ToString(), StringComparison.OrdinalIgnoreCase));
             }
             return View(adsList.ToList());
         }
@@ -103,7 +103,7 @@ namespace ContosoAdsWeb.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<ActionResult> Create(
-            [Bind(Include = "Title,Price,Description,Category,Phone")] Ad ad,
+            [Bind(Include = "Title,Price,Description,CategoryEnum,Phone")] Ad ad,
             HttpPostedFileBase imageFile)
         {
             CloudBlockBlob imageBlob = null;
@@ -119,14 +119,14 @@ namespace ContosoAdsWeb.Controllers
                 ad.PostedDate = DateTime.Now;
                 ad.Id = Guid.NewGuid().ToString();
                 await table.ExecuteAsync(TableOperation.InsertOrReplace(ad.ToAd()));
-                Trace.TraceInformation("Created AdId {0} in database", ad.Id);
+                Trace.TraceInformation("Created Id {0} in database", ad.Id);
 
                 if (imageBlob != null)
                 {
                     BlobInformation blobInfo = new BlobInformation() { Id = ad.Id, BlobUri = new Uri(ad.ImageURL) };
                     var queueMessage = new CloudQueueMessage(JsonConvert.SerializeObject(blobInfo));
                     await thumbnailRequestQueue.AddMessageAsync(queueMessage);
-                    Trace.TraceInformation("Created queue message for AdId {0}", ad.Id);
+                    Trace.TraceInformation("Created queue message for Id {0}", ad.Id);
                 }
                 return RedirectToAction("Index");
             }
@@ -155,7 +155,7 @@ namespace ContosoAdsWeb.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<ActionResult> Edit(
-            [Bind(Include = "AdId,Title,Price,Description,ImageURL,ThumbnailURL,PostedDate,Category,Phone")] Ad ad,
+            [Bind(Include = "Id,Title,Price,Description,ImageURL,ThumbnailURL,PostedDate,Category,Phone")] Ad ad,
             HttpPostedFileBase imageFile)
         {
             CloudBlockBlob imageBlob = null;
@@ -172,14 +172,14 @@ namespace ContosoAdsWeb.Controllers
                 
                 // Save changes.
 
-                Trace.TraceInformation("Updated AdId {0} in database", ad.Id);
+                Trace.TraceInformation("Updated Id {0} in database", ad.Id);
 
                 if (imageBlob != null)
                 {
                     BlobInformation blobInfo = new BlobInformation() { Id = ad.Id, BlobUri = new Uri(ad.ImageURL) };
                     var queueMessage = new CloudQueueMessage(JsonConvert.SerializeObject(blobInfo));
                     await thumbnailRequestQueue.AddMessageAsync(queueMessage);
-                    Trace.TraceInformation("Created queue message for AdId {0}", ad.Id);
+                    Trace.TraceInformation("Created queue message for Id {0}", ad.Id);
                 }
                 return RedirectToAction("Index");
             }
@@ -258,7 +258,7 @@ namespace ContosoAdsWeb.Controllers
 
         private Ad FindAdFromId(string id)
         {
-            return table.ExecuteQuery(new TableQuery<Ad>().Where(TableQuery.GenerateFilterCondition("AdId", QueryComparisons.Equal, id))).FirstOrDefault();
+            return table.ExecuteQuery(new TableQuery<Ad>().Where(TableQuery.GenerateFilterCondition("Id", QueryComparisons.Equal, id))).FirstOrDefault();
         }
     }
 }

@@ -15,7 +15,7 @@
         <h4>Ad</h4>
         <hr />
         @Html.ValidationSummary(true, "", new { @class = "text-danger" })
-        @Html.HiddenFor(model => model.AdId)
+        @Html.HiddenFor(model => model.Id)
         @Html.HiddenFor(model => model.ImageURL)
         @Html.HiddenFor(model => model.ThumbnailURL)
 

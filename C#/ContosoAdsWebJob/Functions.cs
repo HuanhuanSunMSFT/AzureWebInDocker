@@ -38,7 +38,7 @@ namespace ContosoAdsWebJob
             Ad ad = FindAdFromId(table, id);
             if (ad == null)
             {
-                throw new Exception(String.Format("AdId {0} not found, can't create thumbnail", id.ToString()));
+                throw new Exception(String.Format("Id {0} not found, can't create thumbnail", id.ToString()));
             }
             ad.ThumbnailURL = outputBlob.Uri.ToString();
             table.Execute(TableOperation.Replace(ad.ToAd()));
@@ -88,7 +88,7 @@ namespace ContosoAdsWebJob
 
         private static Ad FindAdFromId(CloudTable table, string id)
         {
-            return table.ExecuteQuery(new TableQuery<Ad>().Where(TableQuery.GenerateFilterCondition("AdId", QueryComparisons.Equal, id))).FirstOrDefault();
+            return table.ExecuteQuery(new TableQuery<Ad>().Where(TableQuery.GenerateFilterCondition("Id", QueryComparisons.Equal, id))).FirstOrDefault();
         }
     }
 }

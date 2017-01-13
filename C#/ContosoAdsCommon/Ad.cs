@@ -26,7 +26,7 @@ namespace ContosoAdsCommon
 
         public Ad ToAd()
         {
-            this.PartitionKey = this.Category.ToString();
+            this.PartitionKey = this.Category;
             this.RowKey = this.Id;
             return this;
         }
@@ -50,7 +50,19 @@ namespace ContosoAdsCommon
         [DataType(DataType.Date)]
         [DisplayFormat(DataFormatString = "{0:yyyy-MM-dd}", ApplyFormatInEditMode = true)]
         public DateTime PostedDate { get; set; }
-        public Category? Category { get; set; }
+        public string Category
+        {
+            get
+            {
+                return CategoryEnum.Value.ToString();
+            }
+            set
+            {
+                CategoryEnum = (Category)Enum.Parse(typeof(Category), value);
+            }
+        }
+        [IgnoreProperty]
+        public Category? CategoryEnum { get; set; }
         [StringLength(12)]
         public string Phone { get; set; }
     }
